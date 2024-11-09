@@ -137,16 +137,17 @@ class InfusionBoard:
         assert idx_x in range(self.xSize), f"X coord is negative, or larger than {self.xSize - 1}."
         assert idx_y in range(self.ySize), f"Y coord is negative, or larger than {self.ySize - 1}."
 
-        print("Function Started.")
+        # Pre-checks for whether or not a change can be made.
         if self.board[1,idx_y, idx_x] == 0:
             # Checks if the turn order is 0
             # If so, then nothing happens; for Gas, Plasma, or Planets, time cannot be adjusted.
             self.board = self.board
-            print("Adjusting a nonadjustable; break.")
-        elif self.board[1, idx_y, idx_x] == np.max(self.board[1]) and change>=0:
-            # Checks if this is the maximum turn order.
-            # If so, then nothing happens; the last time cannot be delayed infinitely.
+            change = 0
+        elif (self.board[1, idx_y, idx_x] == np.max(self.board[1]) and change>=0) or (self.board[1, idx_y, idx_x] == 1 and change < 0):
+            # Checks if this is the maximum/minimum turn order.
+            # If so, then nothing happens; the last time cannot be delayed infinitely, nor can the first time be advanced further.
             self.board = self.board
+            change = 0
 
         else:
             # Get current time for this tile.
