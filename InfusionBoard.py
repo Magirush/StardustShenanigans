@@ -144,8 +144,8 @@ class InfusionBoard:
                 if found:
                     break
         #calls the check_results() function to calculate infusion result
-        self.check_results()
-        
+        score = self.check_results()
+        print("Total amount of infusion adding tiles:",score)
 
                         
     def resolve_tile(self,currentType: int,currentX:int ,currentY:int):
