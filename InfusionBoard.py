@@ -13,9 +13,22 @@ class InfusionBoard:
     def __str__(self):
         return str(self.board)
 
-    def change_to_gas(self, idx_x:int, idx_y:int):
-        'Converts tile at (idx_x, idx_y)  to GAS (0)'
-        self.board[0, idx_x, idx_y] = 0
+    def change_type(self, idx_x:int, idx_y:int, type:int):
+        '''Converts tile at (idx_x, idx_y) to a given type.
+        0 - GAS
+        1 - PLASMA
+        2 - BLACK HOLE
+        3 - NOVA
+        4 - SUPERNOVA
+        5 - QUASAR
+        6 - PULSAR
+        7 - NEBULA
+        8 - STAR
+        9 - PLANET
+        '''
+        self.board[0, idx_x, idx_y] = type
+
+    
 
 state_PLASMA = np.ones((6,7))
 turns_NULL = np.zeros((6,7))
