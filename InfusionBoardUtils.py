@@ -11,6 +11,10 @@ class InfusionBoard:
     ySize = 6
     Domains = 2
 
+    # Constants for board cost
+    forgeCost = 10
+    turnCost = 1
+
     # Constants for stardust costs
     placementValues = [
         0, # Gas
@@ -52,6 +56,8 @@ class InfusionBoard:
         True, # Star
         False, # Planet
     ] 
+    
+
 
     # Representation functions
     def __repr__(self):
@@ -59,6 +65,14 @@ class InfusionBoard:
     
     def __str__(self):
         return str(self.board)
+    
+    def copy(self):
+        copy_board = InfusionBoard(0,0,0)
+        np.copyto(copy_board.board, self.board)
+        np.copyto(copy_board.boardinitial, self.boardinitial)
+        self.turnChangeLedger = self.turnChangeLedger
+        self.tileChangeLedger = self.tileChangeLedger
+        return copy_board
 
     # Utility for board-creator 
     def randomPlacementItem(self, costLimit: int):
@@ -69,8 +83,11 @@ class InfusionBoard:
     def __init__(self, startingValue: int, planetCount: int, starCount: int):
         eligible = []
 
-        self.board = np.zeros((self.Domains, self.ySize, self.xSize))
-        
+        self.board = np.zeros((self.Domains, self.ySize, self.xSize),dtype=int)
+
+        # Initialise empty ledgers for turn & tile change
+        self.turnChangeLedger = []
+        self.tileChangeLedger = []
 
         # Initialise counters
         self.activated_nova_nebulas = 0
@@ -119,8 +136,11 @@ class InfusionBoard:
         self.boardinitial=np.copy(self.board)
 
     def alternate_constructor(self, state: np.ndarray, turns: np.ndarray):
-        self.board = np.stack((state, turns))
-        self.boardinitial = np.copy(self.board)
+        if type(state) == None or type(turns) == None:
+            self.board=self.__init__(0,0,0)
+        else:
+            self.board = np.stack((state, turns))
+            self.boardinitial = np.copy(self.board)
     
     # Utils
     def in_bounds(self, x:int,y:int) -> bool:
@@ -133,7 +153,7 @@ class InfusionBoard:
     
     
     def change_time(self, idx_x:int, idx_y:int, change:int):
-        '''Changes time on a tile and updates all other tiles accordingly.'''
+        '''Changes time on a tile and updates all other tiles which would be affected accordingly.'''
         assert idx_x in range(self.xSize), f"X coord is negative, or larger than {self.xSize - 1}."
         assert idx_y in range(self.ySize), f"Y coord is negative, or larger than {self.ySize - 1}."
 
@@ -148,13 +168,14 @@ class InfusionBoard:
             # If so, then nothing happens; the last time cannot be delayed infinitely, nor can the first time be advanced further.
             self.board = self.board
             change = 0
-
         else:
             # Get current time for this tile.
             time_current = self.board[1, idx_y, idx_x]
+            print(f"Current time on {(idx_x, idx_y)} is {time_current}.")
 
             # Time we want to adjust to.
             time_new = time_current + change
+            print(f"We'd like to adjust this to {time_new}.")
 
             # Handling cases where time may be adjusted to go beyond max, or under one-- these cannot be allowed.
             if time_new < 1:
@@ -165,13 +186,12 @@ class InfusionBoard:
             # Redefine change in case the real change was adjusted by the above correction. 
             # We need change for Stardust Cost eval.
             change = time_new - time_current
-
-            print(time_new)
-            print(change)
              
             # Do a swap operation of the times; adjust others accordingly.
 
-            mutable_y, mutable_x = np.where(np.isin(self.board[1], (np.arange(time_current, time_new) if change>=0 else -1*np.arange(-time_current, -time_new+1))))
+            # Find a set of affected coords.
+            print((np.arange(time_current+1, time_new+1)) if change>=0 else -1*np.arange(-time_current, -time_new))
+            mutable_y, mutable_x = np.where(np.isin(self.board[1], (np.arange(time_current+1, time_new+1) if change>=0 else -1*np.arange(-time_current+1, -time_new+1))))
             
             # Adjust the coords we pass over by +/- 1 based on change.
             mutable_coords = zip(mutable_x, mutable_y)
@@ -180,11 +200,13 @@ class InfusionBoard:
                 if change >=0: self.board[1,coord[1], coord[0]] -= 1 
                 else: self.board[1, coord[1], coord[0]] += 1
             
-            # A simple swap operation handles the step at time_new.
-            self.board[1, idx_y, idx_x] = time_new
+            # A simple equality operation handles the step at time_new.
+            self.board[1, idx_y, idx_x] += change
+        
+            self.add_turn_ledger_entry(idx_x, idx_y, change)
     
 
-    def change_time_manual(self, idx_x:int, idx_y:int, time:int):
+    def change_time_manual(self, idx_x:int, idx_y:int, time:int): 
         '''Used for manual time adjustments, such as when a tile transforms into another tile.'''
         assert idx_x in range(self.xSize), f"X coord is negative, or larger than {self.xSize - 1}."
         assert idx_y in range(self.ySize), f"Y coord is negative, or larger than {self.ySize - 1}."
@@ -192,7 +214,10 @@ class InfusionBoard:
         # Perform a manual time adjust on a tile.
         self.board[1, idx_y, idx_x] = time
 
-    def change_type(self, idx_x:int, idx_y:int, type:int):
+    def get_max_turn(self):
+        return np.max(self.board[1])
+
+    def change_type(self, idx_x:int, idx_y:int, type:int, userplaced:bool = False):
         '''
         Converts tile at (idx_x, idx_y) to a given type.
         0 - GAS
@@ -210,20 +235,27 @@ class InfusionBoard:
         # Assertions
         assert idx_x in range(self.xSize), f"X coord is negative, or larger than {self.xSize - 1}."
         assert idx_y in range(self.ySize), f"Y coord is negative, or larger than {self.ySize - 1}."
-        assert type in range(9), "Type not defined!"
+        assert type in range(9), "Type not defined, or inaccessible!"
 
         # Adjust type
         self.board[0, idx_y, idx_x] = type
 
+        #User placement flag
+        if userplaced:
+            self.add_tile_ledger_entry(idx_x, idx_y, type)
+
         # Parsing needed time adjustments associated with conversion, if any.
         current_time = self.board[1, idx_y, idx_x]
+        current_type = self.board[0, idx_y, idx_x]
 
         if current_time != 0:
+            pass
+        elif current_time == 0 and current_type in [0, 1]:
+            # From State to State. Not an Arcana Achievement, but it should be!
             pass
         else:
             next_time = np.max(self.board[1]) + 1
             self.board[1, idx_y, idx_x] = next_time
-            self.timestate[idx_y, idx_x] = next_time
     
     # State evaluator function.
     def forge_item(self):
@@ -258,8 +290,14 @@ class InfusionBoard:
                     break
         # Calls check_results() to calculate infusion result
         score = self.check_results()
-        print(self)
-        return score
+        # Calls stardust_cost() to calculate stardust cost
+        cost = self.get_board_cost()
+
+        # Assemble metrics for this board
+        metrics = {"activated_nova_nebulas":self.activated_nova_nebulas, "nova_no_star_change":self.nova_no_star_change, 
+                    "nebula_no_nova_created":self.nebula_no_nova_created, "new_plasma":self.new_plasma, 
+                    "nova_destroyed_by_blackhole":self.nova_destroyed_by_blackhole, "num_stars":score, "stardust_spent":cost}
+        return self.board, metrics
 
     # Logic handling for black hole tiles
     def black_hole_funct(self,x: int, y: int):
@@ -278,7 +316,7 @@ class InfusionBoard:
                 pass
             # Nebulae are immune to black holes.
             elif self.board[0,new_y,new_x] != 7:
-                # If activation of black hole destroys a nova (3), nova_destroyed_by_blackhole counter is increased by 1
+                # If activation of black hole destroys a Nova (3), nova_destroyed_by_blackhole counter is increased by 1
                 if self.board[0,new_y,new_x] == 3:
                     self.nova_destroyed_by_blackhole += 1
                 # Create new plasma and increase counter
@@ -395,9 +433,11 @@ class InfusionBoard:
             elif self.board[0,new_y,new_x] == 1:
                 count += 1
         if count >= 4:
+            # Did nebula activate successfully?
             flag = True
         else:
             pass
+
         if flag:    
             # Change own type, kick time to end, based on flag
             # Sets type to star
@@ -439,6 +479,7 @@ class InfusionBoard:
 
     # Logic handler for tiles
     def resolve_tile(self,currentType: int,currentX:int ,currentY:int):
+        # Redirects the function to the correct tile type to be processed
         if currentType == 2:
             self.black_hole_funct(currentX, currentY)
         elif currentType == 3:
@@ -454,38 +495,62 @@ class InfusionBoard:
         elif currentType == 8:
             self.star_funct(currentX, currentY)
 
+    # Add a tile change to the ledger
+    def add_tile_ledger_entry(self, x: int, y: int, type: int):
+        self.tileChangeLedger = [entry for entry in self.tileChangeLedger if not (entry[0] == x and entry[1] == y)]
 
+        if self.boardinitial[0, y, x] != type:
+            self.tileChangeLedger.append((x,y,type))
     
-'''
-state_TEST = np.random.randint(0,9,(6,7))
-print(state_TEST)
-# Generic time assigner
-turns_TEST = np.zeros((6,7))
-time = 1
+    # Add a turn change to the ledger
+    def add_turn_ledger_entry(self, x: int, y: int, change: int):
+        if change == 0:
+            return
+        remaining = np.abs(change)
+
+        for i, entry in enumerate(self.turnChangeLedger):
+            if entry[0] == x and entry[1] == y and np.sign(change) != np.sign(entry[2]):
+                del self.turnChangeLedger[i]
+                remaining -= 1
+                if remaining == 0:
+                    break
+        
+        if remaining > 0:
+            for i in range(remaining):
+                self.turnChangeLedger.append((x,y,np.sign(change)))
+
+    # Get cost of changing turn order
+    def get_tile_cost(self):
+        return len(self.turnChangeLedger) * self.turnCost
+
+    # Get cost of changing tile type
+    def get_turn_cost(self):
+        cost = 0
+        for entry in self.tileChangeLedger:
+            cost += self.placementValues[entry[2]]
+        return cost
+    
+    # Get cost of layout
+    def get_board_cost(self):
+        return self.forgeCost + self.get_tile_cost() + self.get_turn_cost()
 
 
-# Unpack to coordinates i,j values where state is NOT (by invert=True) 0, 1, 9; not GAS, PLASMA, or PLANET.
-i, j = np.where(np.isin(state_TEST, [0,1,9], invert=True))
-for idx_y, idx_x in zip(i, j): # To navigate as coordinates (y, x), use zip.
-        turns_TEST[idx_y, idx_x] = time
-        time+=1
-'''       
 def main():
-    '''
-    testboard = InfusionBoard(40,1,1) # 40 starting value, 1 planet, 5 stars
-    # testboard.change_type(3,3,8) # Change a point to a star, just for fun
-    print("INITIAL STATE")
+    '''A test case of this function running off a null board.'''
+    testboard = InfusionBoard(0,0,0)
+    testboard.change_type(0,0,2, True) # Create Black Hole
+    testboard.change_type(2,4,0, True) # Turn (2,4) to gas
+    testboard.change_type(4,4,5, True) # Create Quasar
+    testboard.change_type(5,5,5, True) # Create Yet Another Quasar
+    testboard.change_type(0,3,3, True) # Create Nova
     print(testboard)
-    print("\n")
-    print("FINAL STATE, AFTER EVAL")
-    score = testboard.forge_item()
-    print("Infusion rank: ",score)
-    '''
-    testboard = InfusionBoard(40,2,2)
+    print('TWO TIME ADJUSTMENTS LATER...')
+    testboard.change_time(0,0,2) # Try to delay the Black Hole two turns
     print(testboard)
-    testboard.change_time(2,2,-2)
+    print("ANOTHER TIME ADJUSTMENT AFTER THAT...")
+    testboard.change_time(0,3,-1) # Try to advance a Nova one turn
     print(testboard)
-    print(testboard.boardinitial)
+    print(testboard.forge_item())
 
 if __name__ == "__main__":
     main()
