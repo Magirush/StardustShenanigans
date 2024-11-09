@@ -169,13 +169,15 @@ class InfusionBoard:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
                 pass
-            if self.board[0,new_y,new_x] == 6 or self.board[0,new_y,new_x] == 8:
+            if self.board[0,new_y,new_x] in [2,5,6,8]:
                 self.change_type(x,y,5)
                 break
         for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+            new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
                 pass
-            self.change_type(x,y,1)
+            if self.board[0,new_y,new_x] != 7:
+                self.change_type(x,y,1)
             
     def novaFunct(self, x: int, y: int):
         count = 0
@@ -215,6 +217,26 @@ class InfusionBoard:
                 pass
             if self.board[0,new_y,new_x] == 0:
                 self.change_type(x,y,1)
+
+    def nebFunct(self, x: int, y: int): 
+        count = 0
+        for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 1:
+                count += 1
+        if count >= 4:
+            self.change_type(x,y,3)
+
+
+    def starFunct(self, x: int, y: int):   
+        for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 0:
+
 
     def check_results(self)
         score = 0
