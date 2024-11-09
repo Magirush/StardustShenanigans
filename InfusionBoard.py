@@ -180,20 +180,42 @@ class InfusionBoard:
     def novaFunct(self, x: int, y: int):
         count = 0
         for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
+            new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
                 pass
-            if self.board[0,y+dy,x+dx] == 1:
+            if self.board[0,new_y,new_x] == 1:
                 count += 1
         if count >= 3:
             self.change_type(x,y,8)
         
     def sNovaFunct(self, x: int, y: int):
-        for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
-            if self.board[0,y+dy,x+dx] == 1:
-                count += 1
-        if count >= 3:
-            self.change_type(x,y,8)        
-            
+        for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1), (-2,0), (2,0), (0,2), (0,-2)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 0:
+                self.change_type(x,y,1)
+        self.change_type(x,y,5)       
+    
+    def quasarFunct(self, x: int, y: int):   
+        for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 0:
+                self.change_type(x,y,1)
+        for i in range(6):
+            if self.board[0,i,x] == 0
+                self.change_type(x,i,1)
+
+    def pulsarFunct(self, x: int, y: int):
+        for dx,dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 0:
+                self.change_type(x,y,1)
+
     def check_results(self)
         score = 0
         for k in range(6):
