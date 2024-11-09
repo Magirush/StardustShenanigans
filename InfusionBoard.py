@@ -148,7 +148,7 @@ class InfusionBoard:
         
 
                         
-    def resolve_tile(self,currentType,currentX,currentY):
+    def resolve_tile(self,currentType: int,currentX:int ,currentY:int):
         if currentType = 2:
             blackHoleFunct(currentX, currentY)
         elif currentType = 3:
@@ -164,8 +164,35 @@ class InfusionBoard:
         elif currentType = 8;
             starFunct(currentX, currentY)
     
-    def blackHoleFunct(self,currentX, currentY):
-        if self.board[0,currentX,currentY]      
+    def blackHoleFunct(self,x: int, y: int):
+        for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+            new_x , new_y = x + dx, y+dy
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,new_y,new_x] == 6 or self.board[0,new_y,new_x] == 8:
+                self.change_type(x,y,5)
+                break
+        for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
+            if not(in_bounds(new_x,new_y):
+                pass
+            self.change_type(x,y,1)
+            
+    def novaFunct(self, x: int, y: int):
+        count = 0
+        for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
+            if not(in_bounds(new_x,new_y):
+                pass
+            if self.board[0,y+dy,x+dx] == 1:
+                count += 1
+        if count >= 3:
+            self.change_type(x,y,8)
+        
+    def sNovaFunct(self, x: int, y: int):
+        for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
+            if self.board[0,y+dy,x+dx] == 1:
+                count += 1
+        if count >= 3:
+            self.change_type(x,y,8)        
             
     def check_results(self)
         score = 0
@@ -235,6 +262,12 @@ class InfusionBoard:
             eligible.remove((x,y))
 
     
+def in_bounds(x:int,y:int):
+    #checks if the x and y values are in bounds of the board and reuturns true if it is in bounds and false if not
+    if x>=0 and x<6 and y>= 0 and y<7:
+        return True
+    else:
+        return False
 
 
 
