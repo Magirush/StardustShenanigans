@@ -150,21 +150,21 @@ class InfusionBoard:
                         
     def resolve_tile(self,currentType: int,currentX:int ,currentY:int):
         if currentType = 2:
-            blackHoleFunct(currentX, currentY)
+            black_hole_funct(currentX, currentY)
         elif currentType = 3:
-            novaFunct(currentX, currentY)
+            nova_funct(currentX, currentY)
         elif currentType = 4; 
-            sNovaFunct(currentX, currentY)
+            s_nova_funct(currentX, currentY)
         elif currentType = 5:
-            quasarFunct(currentX, currentY)
+            quasar_funct(currentX, currentY)
         elif currentType = 6:
-            pulsarFunct(currentX, currentY)
+            pulsar_funct(currentX, currentY)
         elif currentType = 7:
-            nebFunct(currentX, currentY)
+            neb_funct(currentX, currentY)
         elif currentType = 8;
-            starFunct(currentX, currentY)
+            star_funct(currentX, currentY)
     
-    def blackHoleFunct(self,x: int, y: int):
+    def black_hole_funct(self,x: int, y: int):
         for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
@@ -179,7 +179,7 @@ class InfusionBoard:
             if self.board[0,new_y,new_x] != 7:
                 self.change_type(x,y,1)
             
-    def novaFunct(self, x: int, y: int):
+    def nova_funct(self, x: int, y: int):
         count = 0
         for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
             new_x , new_y = x + dx, y+dy
@@ -190,7 +190,7 @@ class InfusionBoard:
         if count >= 3:
             self.change_type(x,y,8)
         
-    def sNovaFunct(self, x: int, y: int):
+    def s_nova_funct(self, x: int, y: int):
         for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1), (-2,0), (2,0), (0,2), (0,-2)]:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
@@ -199,7 +199,7 @@ class InfusionBoard:
                 self.change_type(x,y,1)
         self.change_type(x,y,5)       
     
-    def quasarFunct(self, x: int, y: int):   
+    def quasar_funct(self, x: int, y: int):   
         for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
@@ -210,7 +210,7 @@ class InfusionBoard:
             if self.board[0,i,x] == 0
                 self.change_type(x,i,1)
 
-    def pulsarFunct(self, x: int, y: int):
+    def pulsar_funct(self, x: int, y: int):
         for dx,dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
@@ -218,7 +218,7 @@ class InfusionBoard:
             if self.board[0,new_y,new_x] == 0:
                 self.change_type(x,y,1)
 
-    def nebFunct(self, x: int, y: int): 
+    def neb_funct(self, x: int, y: int): 
         count = 0
         for dx,dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]:
             new_x , new_y = x + dx, y+dy
@@ -230,7 +230,7 @@ class InfusionBoard:
             self.change_type(x,y,3)
 
 
-    def starFunct(self, x: int, y: int):   
+    def star_funct(self, x: int, y: int):   
         for dx,dy in [(-1, 0), (0, -1), (0, 1), (1, 0)]:
             new_x , new_y = x + dx, y+dy
             if not(in_bounds(new_x,new_y):
