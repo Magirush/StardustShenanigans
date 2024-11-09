@@ -2,6 +2,10 @@ import numpy as np
 import random
 
 class InfusionBoard:
+    xSize = 7
+    ySize = 6
+    Domains = 2
+
     placementValues = [
         0, # Gas
         7, # Plasma
@@ -44,8 +48,8 @@ class InfusionBoard:
     '''
     Class to represent the board and its state during the infusion minigame.
     '''
-    def __init__(self, state: np.ndarray, turns: np.ndarray) -> np.ndarray:
-        self.board = np.stack((state, turns))
+    #def __init__(self, state: np.ndarray, turns: np.ndarray) -> np.ndarray:
+        #self.board = np.stack((state, turns))
     
     def __repr__(self):
         print(self.board)
@@ -56,8 +60,8 @@ class InfusionBoard:
     def change_time(self, idx_y:int, idx_x:int, change:int):
         '''Changes time on a tile and updates accordingly.'''
         assert change in [-1, 1]
-        assert idx_x in range(7)
-        assert idx_y in range(6)
+        assert idx_x in range(self.xSize)
+        assert idx_y in range(self.ySize)
 
         if self.board[1,idx_y, idx_x] == 0:
             '''Checks if the turn order is 0, if so, then nothing happens; for Gas, Plasma, or Planets, time cannot be adjusted.'''
@@ -94,8 +98,8 @@ class InfusionBoard:
         array uses (z, y, x), z = 0  for tile types, z = 1 for tile turn order
         '''
         # Assertions
-        assert idx_x in range(7)
-        assert idx_y in range(6)
+        assert idx_x in range(self.xSize)
+        assert idx_y in range(self.ySize)
         assert type in range(9)
 
         # Adjust type
@@ -257,27 +261,23 @@ class InfusionBoard:
             eligible = [i for i, value in enumerate(self.startingValues) if value < costLimit]
             return -1 if not eligible else random.choice(eligible)
                         
-    def createNewBoard(self, startingValue: int, planetCount: int, starCount: int):
+    def __init__(self, startingValue: int, planetCount: int, starCount: int):
         eligible = []
 
-        ySize, xSize = self.board[0].shape
-        print(ySize)
-        print(xSize)
+        self.board = np.zeros((self.Domains, self.ySize, self.xSize))
 
-        for x in range(xSize):
-            for y in range(ySize):
-                self.board[0, y, x] = 0
-                self.board[1, y, x] = 0
+        for x in range(self.xSize):
+            for y in range(self.ySize):
                 eligible.append((x,y))
         
         for i in range(planetCount):
-            if len(eligible) == 0:
+            if len(eligible) != 0:
                 x, y = eligible[random.randrange(len(eligible))]
                 self.board[0, y, x] = 9
                 eligible.remove((x,y))
 
         for i in range(starCount):
-            if len(eligible) == 0:
+            if len(eligible) != 0:
                 x, y = eligible[random.randrange(len(eligible))]
                 self.board[0, y, x] = 8 if random.random() < 0.66 else 6
                 eligible.remove((x,y))
@@ -291,12 +291,10 @@ class InfusionBoard:
             placeItem = self.randomPlacementItem(startingValue)
         
         eligible.clear()
-        y, x = np.where(np.isin(state_TEST, [0,1,9], invert=True))
+        y, x = np.where(np.isin(self.board[0], [0,1,9], invert=True))
         coords = zip(x,y)
         for coord in coords:
             eligible.append(coord)
-
-        print(eligible)
         
         itemTurn = 1
         while len(eligible) > 0:
@@ -313,27 +311,21 @@ def in_bounds(x:int,y:int):
     else:
         return False
 
-
-
-            
-
     
-
+'''
 state_TEST = np.random.randint(0,9,(6,7))
 print(state_TEST)
 # Generic time assigner
 turns_TEST = np.zeros((6,7))
 time = 1
 
+
 # Unpack to coordinates i,j values where state is NOT (by invert=True) 0, 1, 9; not GAS, PLASMA, or PLANET.
 i, j = np.where(np.isin(state_TEST, [0,1,9], invert=True))
 for idx_y, idx_x in zip(i, j): # To navigate as coordinates (y, x), use zip.
         turns_TEST[idx_y, idx_x] = time
         time+=1
-        
-print(turns_TEST)
+'''       
 
-testboard = InfusionBoard(state_TEST, turns_TEST)
-testboard.createNewBoard(40,2,2) # 40 starting value, 2 planets, 2 stars
+testboard = InfusionBoard(40,2,2) # 40 starting value, 2 planets, 2 stars
 print(testboard)
-
