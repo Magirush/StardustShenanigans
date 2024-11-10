@@ -16,11 +16,11 @@ def main():
     #     print(BoardHeuristics.board_value(i))
     # print(len(boards))
     # print(BoardHeuristics.board_value(board))
-    print("The final board initial state is")
-    print(board1)
-    print(f"Tile Ledger: {board1.tileChangeLedger}")
-    print(f"Turn Ledger: {board1.turnChangeLedger}")
-    BoardHeuristics.node_stats(board1)
+    # print("The final board initial state is")
+    # print(board1)
+    # print(f"Tile Ledger: {board1.tileChangeLedger}")
+    # print(f"Turn Ledger: {board1.turnChangeLedger}")
+    #BoardHeuristics.node_stats(board1)
     
 
 if __name__ == "__main__":

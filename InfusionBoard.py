@@ -577,6 +577,11 @@ class InfusionBoard:
             if entry[0] == x and entry[1] == y:
                 return True
         return False
+    
+    def count_protostars(self):
+        target_values = [6, 8, 7, 3]
+        mask = np.isin(self.board[0], target_values)
+        return np.sum(mask)
 
 def main():
     '''A test case of this function running off a null board.'''

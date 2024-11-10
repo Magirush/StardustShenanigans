@@ -28,7 +28,7 @@ def a_star_search(start_node):
         if current_score < best_combined_score:
             best_node = current
             best_combined_score = current_score
-            print(f"New Best Found: {current_score}")
+            print(f"New Best Found: {board_value(best_node)}")
 
 
         moves = get_moves(current)
@@ -36,8 +36,8 @@ def a_star_search(start_node):
         current_neighbors = len(moves)
         total_neighbors += current_neighbors
 
-        if total_nodes_visited % 1000 == 0:
-            print(f"Explored {total_nodes_visited} nodes")
+        if total_neighbors//1000 != (total_neighbors-current_neighbors)//1000:
+            print(f"Explored {total_nodes_visited} / {total_neighbors} nodes")
 
         # Explore neighbors
         for neighbor, cost in moves:
@@ -67,13 +67,15 @@ def a_star_search(start_node):
     else:
         branching_factor = 0
 
-    print(f"Counter: {total_nodes_visited} Branching Factor: {branching_factor} Start Node:\n\n")
-    node_stats(init_node)
+    
 
     print(f"Path:")
     for i, node in enumerate(path):
         print(f"Node: {i}")
         node_stats(node)
+
+    print(f"Counter: {total_nodes_visited} Branching Factor: {branching_factor} Start Node:\n\n")
+    node_stats(init_node)
 
 
     return best_node, -best_combined_score
@@ -81,19 +83,28 @@ def a_star_search(start_node):
 
 #heuristic values for easy mod
 actNovNeb = 5
-noStarNova = 0#-3
-noNovaNeb = 0#-5
+noStarNova = -10
+noNovaNeb = -15
 plasma = 1
-deleteNova = 0#-5
+deleteNova = -5
 # Example functions for testing:
 def board_value(node):
     board,metrics = node.copy().forge_item()
+    protoStars = node.count_protostars()
+
     starAddCount = 400 if metrics["num_stars"] == 10 else metrics["num_stars"] * 20
     starAddCount = -10000 if metrics['num_stars'] > 10 else starAddCount
-    return (starAddCount + metrics["activated_nova_nebulas"] * actNovNeb + metrics["nova_no_star_change"] * noStarNova + metrics["nebula_no_nova_created"] * noNovaNeb + metrics["new_plasma"] * plasma + metrics["nova_destroyed_by_blackhole"] *deleteNova) #/ metrics["stardust_spent"]
+    if protoStars >= 10:
+        
+        return 500 + (starAddCount + metrics["activated_nova_nebulas"] * actNovNeb + metrics["nova_no_star_change"] * noStarNova + metrics["nebula_no_nova_created"] * noNovaNeb + metrics["new_plasma"] * plasma + metrics["nova_destroyed_by_blackhole"] *deleteNova) #/ metrics["stardust_spent"]
+    else:
+        return (protoStars * 10 + metrics["new_plasma"] * plasma + metrics["activated_nova_nebulas"] * actNovNeb + starAddCount)
 
 def get_moves(node):
     arr = []
+
+    # Cannot place star, pulsar, or planet, can only place novae or nebulae if there are less than 10 protostar tiles (star types, or novae / nebulae)
+    logical_tiles = [0,1,2,3,4,5,7] if node.count_protostars() >= 10 else [3,7]
     node_cost = node.get_board_cost()
     if node_cost > 96:
         return arr
@@ -105,14 +116,15 @@ def get_moves(node):
             ):
                 continue
 
-            for type in [0,1,2,3,4,5,7]: # Cannot place star, pulsar, or planet
+            for type in logical_tiles: 
                 if(
                     node.board[0,y,x] == type or  # Don't change a tile to itself
                     (type == 0 and node.board[0,y,x] != 2) or  # Only use gas on black holes
-                    (type == 7 and ((x,y) == (0,0) or          # Don't put nebulas on the edge
+                    (type == 7 and ((x,y) == (0,0) or          # Don't put nebulas on the corner
                                     (x,y) == (0,node.ySize-1) or 
                                     (x,y) == (node.xSize-1,0) or 
-                                    (x,y) == (node.xSize-1,node.ySize-1)))
+                                    (x,y) == (node.xSize-1,node.ySize-1))) or
+                    ((type == 3 or type == 7) and (node.board[0,y,x] == 6 or node.board[0,y,x] == 8)) # Don't replace stars with nebulae/novae
                 ):
                     continue
                 new_node = node.copy()
@@ -135,7 +147,7 @@ def node_stats(node):
     new_node = node.copy()
     value = board_value(new_node)
     result_board, metrics = new_node.forge_item()
-    print(f"Board: {node}\n")
+    print(f"Board: \n{node}\n")
     print(f"Value: {value} \nResult Board:\n{result_board}\nMetrics:\n{metrics}")
     print(f"Latest Action: {node.latest_action}")
     print(f"Turn Ledger: {node.turnChangeLedger}")
