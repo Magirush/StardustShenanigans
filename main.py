@@ -16,7 +16,10 @@ def main():
     #     print(BoardHeuristics.board_value(i))
     # print(len(boards))
     # print(BoardHeuristics.board_value(board))
-
+    print("The board initial state is")
+    print(board1)
+    print(board1.tileChangeLedger)
+    print(board1.turnChangeLedger)
     BoardHeuristics.node_stats(board1)
     
 

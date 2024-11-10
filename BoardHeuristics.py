@@ -80,6 +80,7 @@ def get_moves(node):
     return arr
 
 def node_stats(node):
-    value = board_value(node)
-    result = node.forge_item()
+    new_node = node.copy()
+    value = board_value(new_node)
+    result = new_node.forge_item()
     print(f"Value: {value} \nResult:\n{result}")
