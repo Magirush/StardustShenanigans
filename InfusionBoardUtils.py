@@ -79,7 +79,7 @@ class InfusionBoard:
             eligible = [i for i, value in enumerate(self.startingValues) if value < costLimit]
             return -1 if not eligible else random.choice(eligible)
  
-    # Board creator function (random, in-game style)
+    # Board creator function (random, in-game style, with optional manual mode)
     def __init__(self, startingValue: int, planetCount: int, starCount: int, 
                  useAlternateConstructorLogic: bool = False, alternateConstructorStateMat: np.ndarray = np.zeros((6, 7)), alternateConstructorTurnsMat: np.ndarray = np.zeros((6, 7))):
         
@@ -99,8 +99,6 @@ class InfusionBoard:
             eligible = []
 
             self.board = np.zeros((self.Domains, self.ySize, self.xSize),dtype=int)
-
-
 
             for x in range(self.xSize):
                 for y in range(self.ySize):
@@ -141,16 +139,8 @@ class InfusionBoard:
             
             self.boardinitial=np.copy(self.board)
         else:
-
+            # Manual mode
             self.board = np.stack((alternateConstructorStateMat, alternateConstructorTurnsMat))
-            self.boardinitial = np.copy(self.board)
-
-
-    def alternate_constructor(self, state: np.ndarray, turns: np.ndarray):
-        if type(state) == None or type(turns) == None:
-            self.board=self.__init__(0,0,0)
-        else:
-            self.board = np.stack((state, turns))
             self.boardinitial = np.copy(self.board)
     
     # Utils
@@ -308,7 +298,7 @@ class InfusionBoard:
         metrics = {"activated_nova_nebulas":self.activated_nova_nebulas, "nova_no_star_change":self.nova_no_star_change, 
                     "nebula_no_nova_created":self.nebula_no_nova_created, "new_plasma":self.new_plasma, 
                     "nova_destroyed_by_blackhole":self.nova_destroyed_by_blackhole, "num_stars":score, "stardust_spent":cost}
-        return self.board, metrics
+        return (self.board, metrics)
 
     # Logic handling for black hole tiles
     def black_hole_funct(self,x: int, y: int):
@@ -556,12 +546,33 @@ def main():
     testboard.change_type(0,3,3, True) # Create Nova
     print(testboard)
     print('TWO TIME ADJUSTMENTS LATER...')
-    testboard.change_time(0,0,2) # Try to delay the Black Hole two turns
+    testboard.change_time(0,0,7) # Try to delay the Black Hole 7 turns, when it can only be delayed at most 3 turns.
     print(testboard)
     print("ANOTHER TIME ADJUSTMENT AFTER THAT...")
     testboard.change_time(0,3,-1) # Try to advance a Nova one turn
-    print(testboard)
+    print(testboard.turnChangeLedger)
     print(testboard.forge_item())
+
+    print("\n\n\n\n\n\n\n")
+
+    print("INITIAL BOARD:")
+    testboard2 = InfusionBoard(40,2,2)
+    print(testboard2)
+    print("\n\nINITIAL Turn Changes")
+    print(testboard2.turnChangeLedger)
+    print("\n\n")
+    print("AFTER FORGING, WITH NO EDITS...")
+    finalboard, metrics = testboard2.forge_item()
+    print("\n\nFINAL BOARD:")
+    print(finalboard)
+    print("METRICS:")
+    print(metrics)
+    print("\n\nTurn changes:")
+    print(testboard2.turnChangeLedger)
+    print("\n\nTile changes:")
+    print(testboard2.tileChangeLedger)
+    
+
 
 if __name__ == "__main__":
     main()
