@@ -1,9 +1,118 @@
 from InfusionBoardUtils import InfusionBoard
-#import pygame
-#import sys 
-#import pygame_widgets
-
+import tkinter as tk
+from tkinter import ttk
 import numpy as np
+
+class StardustInfusionReplicator:
+    '''
+    Class that defines the GUI for our replication of the Stardust Infusion minigame.
+    '''
+    
+    def __init__(self, root):
+        '''Setup GUI Main Window, initialize several variables.'''
+
+        self.root = root
+        self.root.title("Stardust Infusion Entry START")
+        self.root.state('zoomed')
+        self.root.wm_attributes("-topmost", 1)
+
+        # Schedule a function to disable topmost priority.
+        self.root.after(50, self.disable_topmost)
+
+        # Start Page Structure
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack()
+
+        self.start_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.start_frame, text="Stardust Infusion Entry Start")
+
+        start_button = tk.Button(self.start_frame, text="START", command=self.entry_frame)
+        start_button.pack(pady=20)
+        
+        self.dropdown_options = {
+            "Gas":{"filename":"./gui/gas.png", "number":0, "lock_times":True},
+            "Plasma":{"filename":"./gui/plasma.png", "number":1, "lock_times":True},
+            "Black Hole":{"filename":"./gui/black_hole.png", "number":2, "lock_times":False},
+            "Nova":{"filename":"./gui/nova.png", "number":3, "lock_times":False},
+            "Supernova":{"filename":"./gui/supernova.png", "number":4, "lock_times":False},
+            "Quasar":{"filename":"./gui/quasar.png", "number":5, "lock_times":False},
+            "Pulsar":{"filename":"./gui/pulsar.png", "number":6, "lock_times":False},
+            "Nebula":{"filename":"./gui/nebula.png", "number":7, "lock_times":False},
+            "Star":{"filename":"./gui/star.png", "number":8, "lock_times":False},
+            "Planet":{"filename":"./gui/planet.png", "number":9, "lock_times":True}
+        }
+
+        print(list(self.dropdown_options.keys()))
+
+        # Dummy initial vars...
+        self.root.mainloop()
+
+    def disable_topmost(self):
+        '''Disables topmost window priority.'''
+        self.root.wm_attributes("-topmost", False)
+
+    def entry_frame(self):
+        '''The frame where we enter the initial state of the board.'''
+
+        # Initialize Entry Frame
+        self.entries_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.entries_frame, text="Stardust Infusion Entry")
+
+        self.all_dropdowns = []
+        self.all_entries = []
+
+        for row in range(6):
+            for col in range(7):
+
+                # Combobox
+                dropdown = ttk.Combobox(self.entries_frame, values=list(self.dropdown_options.keys()), width=10)
+                dropdown.grid(row=row, column=col*2, padx=5,pady=5,sticky="w")
+                dropdown.current(0)
+
+                # Entry Field
+                # Default to 0.
+                text = tk.StringVar()
+                text.set("0")
+
+                entry = tk.Entry(self.entries_frame, width=5, textvariable=text)
+                entry.grid(row=row, column=col*2+1, padx=5, pady=5, sticky="e")
+
+                self.all_dropdowns.append(dropdown)
+                self.all_entries.append(entry)
+
+        print(self.all_dropdowns)
+        print(self.all_entries)
+
+        button = tk.Button(self.entries_frame, width = 20, text="Process Input", command=self.process_inputs)
+        button.grid(row=8, column=15, padx=0, pady=20)
+        self.notebook.select(self.entries_frame)
+
+    def process_inputs(self):
+
+        # Gather all the inputs for the dropdowns
+        state_string = "".join([str(self.dropdown_options[combobox.get()]["number"]) for combobox in self.all_dropdowns])
+        turn_string = "".join([entry.get() for entry in self.all_entries])
+
+        print(state_string)
+        print(turn_string)
+        state_arr = np.array(list(state_string),dtype=int).reshape((6,7))
+        turn_arr = np.array(list(turn_string),dtype=int).reshape((6,7))
+
+        board = InfusionBoard(0,0,0,True, state_arr, turn_arr)
+
+        print(board)
+        print("\n\n\n\n\n\n\n\n\n")
+        print(board.forge_item())
+
+
+
+
+
+
+
+
+
+
 
 def input_matrix():
     """Takes matrix input from the command line."""
@@ -46,77 +155,10 @@ def main():
     score_final=b.forge_item()
     print(score_final)
 
-'''
-def gui_main():
-    # initializing the constructor 
-    pygame.init() 
-    
-    # screen resolution 
-    res = (720,720) 
-    
-    # opens up a window 
-    screen = pygame.display.set_mode(res) 
-    
-    # white color 
-    color = (255,255,255) 
-    
-    # light shade of the button 
-    color_light = (170,170,170) 
-    
-    # dark shade of the button 
-    color_dark = (100,100,100) 
-    
-    # stores the width of the 
-    # screen into a variable 
-    width = screen.get_width() 
-    
-    # stores the height of the 
-    # screen into a variable 
-    height = screen.get_height() 
-    
-    # defining a font 
-    smallfont = pygame.font.SysFont('Corbel',35) 
-    
-    # rendering a text written in 
-    # this font 
-    text = smallfont.render('quit' , True , color) 
-    
-    while True: 
-        
-        for ev in pygame.event.get(): 
-            
-            if ev.type == pygame.QUIT: 
-                pygame.quit() 
-                
-            #checks if a mouse is clicked 
-            if ev.type == pygame.MOUSEBUTTONDOWN: 
-                
-                #if the mouse is clicked on the 
-                # button the game is terminated 
-                if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40: 
-                    pygame.quit() 
-                    
-        # fills the screen with a color 
-        screen.fill((60,25,60)) 
-        
-        # stores the (x,y) coordinates into 
-        # the variable as a tuple 
-        mouse = pygame.mouse.get_pos() 
-        
-        # if mouse is hovered on a button it 
-        # changes to lighter shade  
-        if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40: 
-            pygame.draw.rect(screen,color_light,[width/2,height/2,140,40]) 
-            
-        else: 
-            pygame.draw.rect(screen,color_dark,[width/2,height/2,140,40]) 
-        
-        # superimposing the text onto our button 
-        screen.blit(text , (width/2+50,height/2)) 
-        
-        # updates the frames of the game 
-        pygame.display.update() 
-'''
+    app = tk.Tk()
+    entry_app = StardustInfusionReplicator(app)
+    app.mainloop()
+
 
 
 if __name__ == "__main__":
