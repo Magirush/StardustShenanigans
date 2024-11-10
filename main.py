@@ -20,12 +20,24 @@ def input_matrix():
     return np.array(matrix)
 
 def main():
-    state = input_matrix()
-    print("\nNow the times!\n")
-    turns = input_matrix()
-
-    b = InfusionBoard.alternate_constructor(InfusionBoard(0,0,0), state=state, turns=turns)
     
+    state = np.array([[0, 0, 0, 4, 0, 0, 0],
+                      [0, 0, 0, 9, 0, 0, 0],
+                      [0, 0, 0, 5, 8, 0, 9],
+                      [0, 0, 0, 9, 0, 2, 0],
+                      [0, 0, 0, 0, 7, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+    
+    turns = np.array([[0, 0, 0, 4, 0, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0],
+                      [0, 0, 0, 2, 3, 0, 0],
+                      [0, 0, 0, 0, 0, 5, 0],
+                      [0, 0, 0, 0, 1, 0, 0],
+                      [0, 0, 0, 0, 0, 0, 0]])
+
+
+    b = InfusionBoard(0, 0, 0, True, state, turns)
+    b.change_type(5, 3, 0)
     # This is tyler and magi's job
     #
     #
@@ -33,7 +45,6 @@ def main():
 
     score_final=b.forge_item()
     print(score_final)
-    print(b)
 
 '''
 def gui_main():

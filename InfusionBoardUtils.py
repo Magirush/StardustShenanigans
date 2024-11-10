@@ -80,11 +80,10 @@ class InfusionBoard:
             return -1 if not eligible else random.choice(eligible)
  
     # Board creator function (random, in-game style)
-    def __init__(self, startingValue: int, planetCount: int, starCount: int):
-        eligible = []
-
-        self.board = np.zeros((self.Domains, self.ySize, self.xSize),dtype=int)
-
+    def __init__(self, startingValue: int, planetCount: int, starCount: int, 
+                 useAlternateConstructorLogic: bool = False, alternateConstructorStateMat: np.ndarray = np.zeros((6, 7)), alternateConstructorTurnsMat: np.ndarray = np.zeros((6, 7))):
+        
+        
         # Initialise empty ledgers for turn & tile change
         self.turnChangeLedger = []
         self.tileChangeLedger = []
@@ -95,45 +94,57 @@ class InfusionBoard:
         self.nebula_no_nova_created = 0
         self.new_plasma = 0
         self.nova_destroyed_by_blackhole = 0
-
-        for x in range(self.xSize):
-            for y in range(self.ySize):
-                eligible.append((x,y))
         
-        for i in range(planetCount):
-            if len(eligible) != 0:
-                x, y = eligible[random.randrange(len(eligible))]
-                self.board[0, y, x] = 9
-                eligible.remove((x,y))
+        if not useAlternateConstructorLogic:
+            eligible = []
 
-        for i in range(starCount):
-            if len(eligible) != 0:
-                x, y = eligible[random.randrange(len(eligible))]
-                self.board[0, y, x] = 8 if random.random() < 0.66 else 6
-                eligible.remove((x,y))
-        
-        placeItem = self.randomPlacementItem(startingValue)
-        while(placeItem != -1 and len(eligible) > 0):
-            x, y = eligible[random.randrange(len(eligible))]
-            self.board[0, y, x] = placeItem
-            eligible.remove((x,y))
-            startingValue -= self.placementValues[placeItem]
+            self.board = np.zeros((self.Domains, self.ySize, self.xSize),dtype=int)
+
+
+
+            for x in range(self.xSize):
+                for y in range(self.ySize):
+                    eligible.append((x,y))
+            
+            for i in range(planetCount):
+                if len(eligible) != 0:
+                    x, y = eligible[random.randrange(len(eligible))]
+                    self.board[0, y, x] = 9
+                    eligible.remove((x,y))
+
+            for i in range(starCount):
+                if len(eligible) != 0:
+                    x, y = eligible[random.randrange(len(eligible))]
+                    self.board[0, y, x] = 8 if random.random() < 0.66 else 6
+                    eligible.remove((x,y))
+            
             placeItem = self.randomPlacementItem(startingValue)
-        
-        eligible.clear()
-        y, x = np.where(np.isin(self.board[0], [0,1,9], invert=True))
-        coords = zip(x,y)
-        for coord in coords:
-            eligible.append(coord)
-        
-        itemTurn = 1
-        while len(eligible) > 0:
-            x, y = eligible[random.randrange(len(eligible))]
-            self.board[1, y, x] = itemTurn
-            itemTurn += 1
-            eligible.remove((x,y))
-        
-        self.boardinitial=np.copy(self.board)
+            while(placeItem != -1 and len(eligible) > 0):
+                x, y = eligible[random.randrange(len(eligible))]
+                self.board[0, y, x] = placeItem
+                eligible.remove((x,y))
+                startingValue -= self.placementValues[placeItem]
+                placeItem = self.randomPlacementItem(startingValue)
+            
+            eligible.clear()
+            y, x = np.where(np.isin(self.board[0], [0,1,9], invert=True))
+            coords = zip(x,y)
+            for coord in coords:
+                eligible.append(coord)
+            
+            itemTurn = 1
+            while len(eligible) > 0:
+                x, y = eligible[random.randrange(len(eligible))]
+                self.board[1, y, x] = itemTurn
+                itemTurn += 1
+                eligible.remove((x,y))
+            
+            self.boardinitial=np.copy(self.board)
+        else:
+
+            self.board = np.stack((alternateConstructorStateMat, alternateConstructorTurnsMat))
+            self.boardinitial = np.copy(self.board)
+
 
     def alternate_constructor(self, state: np.ndarray, turns: np.ndarray):
         if type(state) == None or type(turns) == None:
