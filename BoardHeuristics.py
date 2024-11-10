@@ -84,18 +84,17 @@ def a_star_search(start_node):
 #heuristic values for easy mod
 actNovNeb = 5
 noStarNova = -10
-noNovaNeb = -15
+noNovaNeb = -25
 plasma = 1
-deleteNova = -5
+deleteNova = -25
 # Example functions for testing:
 def board_value(node):
     board,metrics = node.copy().forge_item()
     protoStars = node.count_protostars()
 
-    starAddCount = 400 if metrics["num_stars"] == 10 else metrics["num_stars"] * 20
+    starAddCount = 500 if metrics["num_stars"] == 10 else metrics["num_stars"] * 20
     starAddCount = -10000 if metrics['num_stars'] > 10 else starAddCount
     if protoStars >= 10:
-        
         return 500 + (starAddCount + metrics["activated_nova_nebulas"] * actNovNeb + metrics["nova_no_star_change"] * noStarNova + metrics["nebula_no_nova_created"] * noNovaNeb + metrics["new_plasma"] * plasma + metrics["nova_destroyed_by_blackhole"] *deleteNova) #/ metrics["stardust_spent"]
     else:
         return (protoStars * 10 + metrics["new_plasma"] * plasma + metrics["activated_nova_nebulas"] * actNovNeb + starAddCount)
