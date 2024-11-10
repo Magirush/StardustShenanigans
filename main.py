@@ -2,6 +2,7 @@ from InfusionBoardUtils import InfusionBoard
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
+from BoardHeuristics import a_star_search
 
 class StardustInfusionReplicator:
     '''
@@ -87,6 +88,39 @@ class StardustInfusionReplicator:
         button.grid(row=8, column=15, padx=0, pady=20)
         self.notebook.select(self.entries_frame)
 
+    def result_frame(self,final_board: np.array):
+        '''The frame where we enter the final state of the board.'''
+
+        # Initialize Result Frame
+        self.result_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.result_frame, text="Stardust Infusion Result")
+
+        self.all_dropdowns = []
+        self.all_entries = []
+
+        self.final_board = final_board
+
+        for row in range(6):
+            for col in range(7):
+
+                # Combobox
+                dropdown2 = ttk.Combobox(self.result_frame, values=list(self.dropdown_options.keys()), width=10, state="disabled")
+                dropdown2.grid(row=row, column=col*2, padx=5,pady=5,sticky="w")
+                dropdown2.current(self.final_board[0,row,col])
+
+                # Entry Field
+                # Default to 0.
+                text = tk.StringVar()
+                text.set(str(final_board[1,row,col]))
+
+                entry2 = tk.Entry(self.result_frame, width=5, textvariable=text,state="disabled")
+                entry2.grid(row=row, column=col*2+1, padx=5, pady=5, sticky="e")
+
+
+
+        self.notebook.select(self.result_frame)
+
+
     def process_inputs(self):
 
         # Gather all the inputs for the dropdowns
@@ -103,6 +137,12 @@ class StardustInfusionReplicator:
         print(board)
         print("\n\n\n\n\n\n\n\n\n")
         print(board.forge_item())
+        
+        #TODO shove the board into the algorithm, recieve a best state, 
+        best_state = a_star_search(board)
+        self.result_frame(best_state[0])
+        #print(board.forge_item(best_state))
+        
 
 
 
@@ -129,31 +169,6 @@ def input_matrix():
     return np.array(matrix)
 
 def main():
-    
-    state = np.array([[0, 0, 0, 4, 0, 0, 0],
-                      [0, 0, 0, 9, 0, 0, 0],
-                      [0, 0, 0, 5, 8, 0, 9],
-                      [0, 0, 0, 9, 0, 2, 0],
-                      [0, 0, 0, 0, 7, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0]])
-    
-    turns = np.array([[0, 0, 0, 4, 0, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0],
-                      [0, 0, 0, 2, 3, 0, 0],
-                      [0, 0, 0, 0, 0, 5, 0],
-                      [0, 0, 0, 0, 1, 0, 0],
-                      [0, 0, 0, 0, 0, 0, 0]])
-
-
-    b = InfusionBoard(0, 0, 0, True, state, turns)
-    b.change_type(5, 3, 0)
-    # This is tyler and magi's job
-    #
-    #
-    #
-
-    score_final=b.forge_item()
-    print(score_final)
 
     app = tk.Tk()
     entry_app = StardustInfusionReplicator(app)

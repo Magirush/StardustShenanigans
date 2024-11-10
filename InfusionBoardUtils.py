@@ -62,6 +62,7 @@ class InfusionBoard:
     # Representation functions
     def __repr__(self):
         print(self.board)
+        return(str(self.board))
     
     def __str__(self):
         return str(self.board)
@@ -70,8 +71,8 @@ class InfusionBoard:
         copy_board = InfusionBoard(0,0,0)
         np.copyto(copy_board.board, self.board)
         np.copyto(copy_board.boardinitial, self.boardinitial)
-        self.turnChangeLedger = self.turnChangeLedger
-        self.tileChangeLedger = self.tileChangeLedger
+        self.turnChangeLedger = self.turnChangeLedger.copy()
+        self.tileChangeLedger = self.tileChangeLedger.copy()
         return copy_board
 
     # Utility for board-creator 
@@ -518,7 +519,7 @@ class InfusionBoard:
         
         if remaining > 0:
             for i in range(remaining):
-                self.turnChangeLedger.append((x,y,np.sign(change)))
+                self.turnChangeLedger.append((x,y,int(np.sign(change))))
 
     # Get cost of changing turn order
     def get_tile_cost(self):
