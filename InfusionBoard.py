@@ -96,8 +96,8 @@ class InfusionBoard:
         copy_board = InfusionBoard(0,0,0)
         np.copyto(copy_board.board, self.board)
         np.copyto(copy_board.boardinitial, self.boardinitial)
-        copy_board.turnChangeLedger = self.turnChangeLedger
-        copy_board.tileChangeLedger = self.tileChangeLedger
+        copy_board.turnChangeLedger = self.turnChangeLedger.copy()
+        copy_board.tileChangeLedger = self.tileChangeLedger.copy()
         return copy_board
 
     # Utility for board-creator 
@@ -114,6 +114,7 @@ class InfusionBoard:
         # Initialise empty ledgers for turn & tile change
         self.turnChangeLedger = []
         self.tileChangeLedger = []
+        self.latest_action = "None"
 
         self.uuid = uuid.uuid4()
 
@@ -527,6 +528,8 @@ class InfusionBoard:
     def add_tile_ledger_entry(self, x: int, y: int, type: int):
         self.tileChangeLedger = [entry for entry in self.tileChangeLedger if not (entry[0] == x and entry[1] == y)]
 
+        self.latest_action = f"Tile Change at {x},{y} to type {type}"
+
         if self.boardinitial[0, y, x] != type:
             self.tileChangeLedger.append((x,y,type))
     
@@ -535,6 +538,7 @@ class InfusionBoard:
         if change == 0:
             return
         remaining = np.abs(change)
+        self.latest_action = f"Turn Change at {x},{y} of value {change}"
 
         for i, entry in enumerate(self.turnChangeLedger):
             if entry[0] == x and entry[1] == y and np.sign(change) != np.sign(entry[2]):
@@ -545,14 +549,14 @@ class InfusionBoard:
         
         if remaining > 0:
             for i in range(remaining):
-                self.turnChangeLedger.append((x,y,np.sign(change)))
+                self.turnChangeLedger.append((x,y,np.sign(change).item()))
 
     # Get cost of changing turn order
-    def get_tile_cost(self):
+    def get_turn_cost(self):
         return len(self.turnChangeLedger) * self.turnCost
 
     # Get cost of changing tile type
-    def get_turn_cost(self):
+    def get_tile_cost(self):
         cost = 0
         for entry in self.tileChangeLedger:
             cost += self.placementValues[entry[2]]
@@ -561,7 +565,18 @@ class InfusionBoard:
     # Get cost of layout
     def get_board_cost(self):
         return self.forgeCost + self.get_tile_cost() + self.get_turn_cost()
+    
+    def has_tile_change_at(self, x: int, y: int):
+        for entry in self.tileChangeLedger:
+            if entry[0] == x and entry[1] == y:
+                return True
+        return False
 
+    def has_turn_change_at(self, x: int, y: int):
+        for entry in self.turnChangeLedger:
+            if entry[0] == x and entry[1] == y:
+                return True
+        return False
 
 def main():
     '''A test case of this function running off a null board.'''
